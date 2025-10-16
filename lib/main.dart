@@ -60,6 +60,16 @@ class MyHomePage extends StatelessWidget {
               onPressed: _delete,
               child: const Text('delete'),
             ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _queryById,
+              child: const Text('query by ID'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _deleteAll,
+              child: const Text('delete all'),
+            ),
           ],
         ),
       ),
