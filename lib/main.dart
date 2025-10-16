@@ -27,104 +27,125 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
-  // homepage layout
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final TextEditingController _idController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+
+  void _showAlert(String title, String content) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+        ],
+      ),
+    );
+  }
+
+  void _insert() async {
+    Map<String, dynamic> row = {
+      DatabaseHelper.columnName: _nameController.text,
+      DatabaseHelper.columnAge: int.parse(_ageController.text),
+    };
+    final id = await dbHelper.insert(row);
+    debugPrint('inserted row id: $id');
+    _showAlert('Insert', 'Inserted row id: $id');
+  }
+
+  void _query() async {
+    final id = int.parse(_idController.text);
+    final row = await dbHelper.queryById(id);
+    debugPrint('query row: $row');
+    _showAlert('Query', row != null ? row.toString() : 'No row found with ID $id');
+  }
+
+  void _update() async {
+    Map<String, dynamic> row = {
+      DatabaseHelper.columnId: int.parse(_idController.text),
+      DatabaseHelper.columnName: _nameController.text,
+      DatabaseHelper.columnAge: int.parse(_ageController.text),
+    };
+    final rowsAffected = await dbHelper.update(row);
+    debugPrint('updated $rowsAffected row(s)');
+    _showAlert('Update', 'Updated $rowsAffected row(s)');
+  }
+
+  void _delete() async {
+    final id = int.parse(_idController.text);
+    final rowsDeleted = await dbHelper.delete(id);
+    debugPrint('deleted $rowsDeleted row(s): row $id');
+    _showAlert('Delete', 'Deleted $rowsDeleted row(s): row $id');
+  }
+
+  void _queryById() async {
+    final idToQuery = int.parse(_idController.text);
+    final row = await dbHelper.queryById(idToQuery);
+    if (row != null) {
+      debugPrint('Queried row: $row');
+      _showAlert('Queried Row', '''
+ID: ${row[DatabaseHelper.columnId]}
+Name: ${row[DatabaseHelper.columnName]}
+Age: ${row[DatabaseHelper.columnAge]}
+''');
+    } else {
+      debugPrint('No row found with ID $idToQuery');
+      _showAlert('Query by ID', 'No row found with ID $idToQuery');
+    }
+  }
+
+  void _deleteAll() async {
+    final rowsDeleted = await dbHelper.deleteAll();
+    debugPrint('Deleted $rowsDeleted row(s)');
+    _showAlert('Delete All', 'Deleted $rowsDeleted row(s)');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('sqflite'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: _insert,
-              child: const Text('insert'),
+      appBar: AppBar(title: const Text('sqflite')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            TextField(
+              controller: _idController,
+              decoration: const InputDecoration(labelText: 'ID'),
+              keyboardType: TextInputType.number,
             ),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: _ageController,
+              decoration: const InputDecoration(labelText: 'Age'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _insert, child: const Text('insert')),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _query,
-              child: const Text('query'),
-            ),
+            ElevatedButton(onPressed: _query, child: const Text('query')),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _update,
-              child: const Text('update'),
-            ),
+            ElevatedButton(onPressed: _update, child: const Text('update')),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _delete,
-              child: const Text('delete'),
-            ),
+            ElevatedButton(onPressed: _delete, child: const Text('delete')),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _queryById,
-              child: const Text('query by ID'),
-            ),
+            ElevatedButton(onPressed: _queryById, child: const Text('query by ID')),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _deleteAll,
-              child: const Text('delete all'),
-            ),
+            ElevatedButton(onPressed: _deleteAll, child: const Text('delete all')),
           ],
         ),
       ),
     );
   }
-
-  // Button onPressed methods
-  void _insert() async {
-    // row to insert
-    Map<String, dynamic> row = {
-      DatabaseHelper.columnName: 'Bob',
-      DatabaseHelper.columnAge: 23
-    };
-    final id = await dbHelper.insert(row);
-    debugPrint('inserted row id: $id');
-  }
-
-  void _query() async {
-    final allRows = await dbHelper.queryAllRows();
-    debugPrint('query all rows:');
-    for (final row in allRows) {
-      debugPrint(row.toString());
-    }
-  }
-
-  void _update() async {
-    // row to update
-    Map<String, dynamic> row = {
-      DatabaseHelper.columnId: 1,
-      DatabaseHelper.columnName: 'Mary',
-      DatabaseHelper.columnAge: 32
-    };
-    final rowsAffected = await dbHelper.update(row);
-    debugPrint('updated $rowsAffected row(s)');
-  }
-
-  void _delete() async {
-    // Assuming that the number of rows is the id for the last row.
-    final id = await dbHelper.queryRowCount();
-    final rowsDeleted = await dbHelper.delete(id);
-    debugPrint('deleted $rowsDeleted row(s): row $id');
-  }
-
-  void _queryById() async {
-  const idToQuery = 1;
-  final row = await dbHelper.queryById(idToQuery);
-  if (row != null) {
-    debugPrint('Queried row: $row');
-  } else {
-    debugPrint('No row found with ID $idToQuery');
-  }
-}
-
-void _deleteAll() async {
-  final rowsDeleted = await dbHelper.deleteAll();
-  debugPrint('Deleted $rowsDeleted row(s)');
-}
 }
