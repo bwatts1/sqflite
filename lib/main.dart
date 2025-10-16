@@ -112,4 +112,19 @@ class MyHomePage extends StatelessWidget {
     final rowsDeleted = await dbHelper.delete(id);
     debugPrint('deleted $rowsDeleted row(s): row $id');
   }
+
+  void _queryById() async {
+  const idToQuery = 1;
+  final row = await dbHelper.queryById(idToQuery);
+  if (row != null) {
+    debugPrint('Queried row: $row');
+  } else {
+    debugPrint('No row found with ID $idToQuery');
+  }
+}
+
+void _deleteAll() async {
+  final rowsDeleted = await dbHelper.deleteAll();
+  debugPrint('Deleted $rowsDeleted row(s)');
+}
 }
